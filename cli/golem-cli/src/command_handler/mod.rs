@@ -67,7 +67,6 @@ mod partial_match;
 mod plugin;
 mod profile;
 mod rib_repl;
-mod serve;
 mod worker;
 
 // NOTE: We are explicitly not using #[async_trait] here to be able to NOT have a Send bound
@@ -387,9 +386,6 @@ impl<Hooks: CommandHandlerHooks + 'static> CommandHandler<Hooks> {
             GolemCliSubcommand::Profile { subcommand } => {
                 self.ctx.profile_handler().handle_command(subcommand).await
             }
-            GolemCliSubcommand::Serve { args } => {
-                self.ctx.serve_handler().handle(args).await
-            }
             #[cfg(feature = "server-commands")]
             GolemCliSubcommand::Server { subcommand } => {
                 self.hooks
@@ -436,7 +432,6 @@ pub trait Handlers {
     fn profile_config_handler(&self) -> ProfileConfigCommandHandler;
     fn profile_handler(&self) -> ProfileCommandHandler;
     fn rib_repl_handler(&self) -> RibReplHandler;
-    fn serve_handler(&self) -> crate::command_handler::serve::ServeCommandHandler;
     fn worker_handler(&self) -> WorkerCommandHandler;
 }
 
@@ -529,10 +524,6 @@ impl Handlers for Arc<Context> {
 
     fn rib_repl_handler(&self) -> RibReplHandler {
         RibReplHandler::new(self.clone())
-    }
-
-    fn serve_handler(&self) -> crate::command_handler::serve::ServeCommandHandler {
-        crate::command_handler::serve::ServeCommandHandler::new(self.clone())
     }
 
     fn worker_handler(&self) -> WorkerCommandHandler {

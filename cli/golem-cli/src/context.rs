@@ -89,7 +89,7 @@ pub struct Context {
     file_download_client: reqwest::Client,
 
     // Lazy initialized
-    golem_clients: tokio::sync::OnceCell<Arc<GolemClients>>,
+    golem_clients: tokio::sync::OnceCell<GolemClients>,
     templates: std::sync::OnceLock<
         BTreeMap<GuestLanguage, BTreeMap<ComposableAppGroupName, ComposableAppTemplate>>,
     >,
@@ -440,8 +440,8 @@ impl Context {
         self.http_parallelism
     }
 
-    pub async fn golem_clients(&self) -> anyhow::Result<Arc<GolemClients>> {
-        let clients = self.golem_clients
+    pub async fn golem_clients(&self) -> anyhow::Result<&GolemClients> {
+        self.golem_clients
             .get_or_try_init(|| async {
                 let clients = GolemClients::new(
                     &self.client_config,
@@ -451,10 +451,9 @@ impl Context {
                 )
                 .await?;
 
-                Ok::<Arc<GolemClients>, anyhow::Error>(Arc::new(clients))
+                Ok(clients)
             })
-            .await?;
-        Ok(clients.clone())
+            .await
     }
 
     pub fn file_download_client(&self) -> &reqwest::Client {
